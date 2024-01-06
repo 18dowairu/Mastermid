@@ -55,6 +55,8 @@ menu = False
 leaderboard = False
 menu_img = pygame.transform.scale(pygame.image.load('MASTERMIND.png'), (width/2, height/2))
 check = False
+win = False
+lose = False
 
 
 # class for Buttons
@@ -126,10 +128,16 @@ def drawMenu():
     leaderboardButton.draw()
 
 def drawLeaderboard():
-    pygame.draw.rect(screen, white, [width / 2, height / 2, width / 2 + 10, height / 2 + 10])
+    leaderboard_rect = pygame.Rect(width / 2, height / 2, width / 2 + 10, height / 2 + 10)
+    pygame.draw.rect(screen, white, leaderboard_rect)
+    screen.blit(pygame.Surface(leaderboard_rect.size), leaderboard_rect)
+    pygame.display
+    
+def getScore():
+    pass
 
 def checkGuess():
-    global solved, menu
+    global solved, menu, win
     checkTurn = guessColours[turn]
     responses = [grey, grey, grey, grey]
     responseIndex = 0
@@ -161,13 +169,16 @@ def checkGuess():
     if responses.count(red) == 4:
         solved = True
         menu = True
+        win = True
 
 
 run = True
 menuButton = buttons('Menu', (0, 0), (width / 5, height / 13))
 submitButton = buttons('Submit', (0, 12 * height / 13), (width / 2, height / 13))
 restartButton = buttons('Restart', (width / 2, 12 * height / 13), (width / 2, height / 13))
-leaderboardButton = buttons("Leaderboard", (width-180, 3), (width / 2, height / 14))
+leaderboardButton = buttons("Leaderboard", (width/4, 10* height/13), (width / 2, height / 14))
+loseButton = buttons('  You lose', (width/4, 2* height/13), (width / 2, height / 14))
+winButton = buttons('   You win', (width/4, 2* height/13), (width / 2, height / 14))
 while run:
     timer.tick(fps)
     screen.fill(backgroundColour)
@@ -177,13 +188,21 @@ while run:
     drawScreen()
     if menu:
         drawMenu()
+        if win:
+            winButton.draw()
+        elif lose:
+            loseButton.draw()
         if leaderboard:
             drawLeaderboard()
     if check:
         checkGuess()
         turn += 1
         for i in range(4):
-            guessColours[turn][i] = white
+            try:
+                guessColours[turn][i] = white
+            except:
+                menu = True
+                lose = True
         check = False
 
     for event in pygame.event.get():
@@ -219,7 +238,7 @@ while run:
             elif menuButton.rect.collidepoint(event.pos):
                 if not menu:
                     menu = True
-                    if menu == True and leaderboardButton.rect.collidepoint(event.pos):
+                    if leaderboardButton.rect.collidepoint(event.pos):
                         leaderboard = True
                 else:
                     menu = False
