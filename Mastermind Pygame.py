@@ -51,14 +51,17 @@ selected = 0
 turn = 0
 selectedColour = (26, 230, 204)
 solvedColour = (26, 230, 204)
-solved = False
-menu = False
+solved = False                                                                     
+menu = True
 leaderboard = False
 menu_img = pygame.transform.scale(pygame.image.load('MASTERMIND.png'), (width/2, height/2))
+mainmenu_img = pygame.transform.scale(pygame.image.load('LOGO.jpeg'), (width, height/4))
 check = False
 win = False
 lose = False
-
+start = False
+mainMenu = True
+scoreAdded = False
 class players:
     def __init__(self,name,score):
         self.name = name
@@ -132,6 +135,21 @@ def drawScreen():
     pygame.draw.line(screen, white, (0, 0), (0, height), 3)
     pygame.draw.line(screen, white, (width - 1, 0), (width - 1, height), 3)
 
+def drawMainMenu():
+    pygame.draw.rect(screen, grey, [0,0, width , height])
+    displayRect = pygame.Rect(width/4, height/2.5, width/2, height/8)
+    inputRect = pygame.Rect(width/4, height/2, width/2, height/20)
+    pygame.draw.rect(screen, white, inputRect)
+    screen.blit(mainmenu_img, (0, 0))
+    screen.blit(font.render(playerName, True, black), (inputRect))
+    screen.blit(font.render('Enter your player name:', True, black), (displayRect))
+    startButton.draw()
+def calculateScore():
+    global scoreAdded
+    score = 10 - turn
+    print('your score is', score)
+    scoreAdded = True
+    return score
 
 def drawMenu():
     pygame.draw.rect(screen, white, [width / 4 - 5, height / 4 - 5, width / 2 + 10, height / 2 + 10])
@@ -139,13 +157,15 @@ def drawMenu():
     leaderboardButton.draw()
 
 def drawLeaderboard():
+    score = calculateScore()
+    name = playerName
     pygame.draw.rect(screen, white, [width / 4 - 5, height / 4 - 5, width / 2 + 10, height / 2 + 10])
+    for i, (name, score) in enumerate(leaderboardDisplay):
+        text = (f"{i + 1}. {name}: {score}")
+        screen.blit(font.render(text, True, black), (width / 4 + 10, height / 4 + i * 20))
+
   
     
-def calculateScore():
-    score = 10 - turn
-    print('your score is', score)
-
 def checkGuess():
     global solved, menu, win
     checkTurn = guessColours[turn]
@@ -181,7 +201,8 @@ def checkGuess():
         menu = True
         win = True
 
-
+leaderboardDisplay = []
+playerName = ''
 run = True
 menuButton = buttons('Menu', (0, 0), (width / 5, height / 13))
 submitButton = buttons('Submit', (0, 12 * height / 13), (width / 2, height / 13))
@@ -189,26 +210,31 @@ restartButton = buttons('Restart', (width / 2, 12 * height / 13), (width / 2, he
 leaderboardButton = buttons("Leaderboard", (width/4, 10* height/13), (width / 2, height / 14))
 loseButton = buttons('  You lose', (width/4, 2* height/13), (width / 2, height / 14))
 winButton = buttons('   You win', (width/4, 2* height/13), (width / 2, height / 14))
+startButton = buttons("      Start", (width/4, 9* height/13), (width / 2, height / 14))
 while run:
     timer.tick(fps)
     screen.fill(backgroundColour)
     mouse_coords = pygame.mouse.get_pos()
     mouse_buttons = pygame.mouse.get_pressed()
     # print(mouse_pressed)
-
-    drawScreen()
-    if menu:
-        drawMenu()
-        if win:
-            winButton.draw()
-            calculateScore()
-        elif lose:
-            loseButton.draw()
-            solved = True
-            calculateScore()
-        if leaderboard:
-            drawLeaderboard()
-
+    if mainMenu:
+        drawMainMenu()
+    if not mainMenu:
+        drawScreen()
+        if menu or win or lose:
+            drawMenu()
+            if win:
+                winButton.draw()
+                solved = True
+            elif lose:
+                loseButton.draw()
+                solved = True
+            if (win or lose) and not scoreAdded:
+                leaderboardDisplay.append((playerName, calculateScore()))
+                leaderboardDisplay.sort(key=lambda x: x[1], reverse=True)
+                scoreAdded = True
+            if leaderboard and menu:
+                drawLeaderboard()
     if check:
         checkGuess()
         turn += 1
@@ -223,12 +249,21 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKSPACE:
+                playerName = playerName[0:-1]
+            else:
+                playerName += event.unicode
         if event.type == pygame.MOUSEBUTTONDOWN:
             if restartButton.rect.collidepoint(event.pos):
-                menu = False
+                playerName = ''
+                mainMenu = True
+                scoreAdded = False
+                menu = True
                 turn = 0
                 solved = False
                 lose = False
+                win = False
                 answerColours = [random.choice(choiceColours), random.choice(choiceColours),
                                  random.choice(choiceColours), random.choice(choiceColours)]
                 guessColours = [[white, white, white, white],
@@ -251,6 +286,8 @@ while run:
                              [grey, grey, grey, grey],
                              [grey, grey, grey, grey],
                              [grey, grey, grey, grey]]
+            elif startButton.rect.collidepoint(event.pos):
+                mainMenu = False
             elif menuButton.rect.collidepoint(event.pos):
                 if not menu:
                     menu = True
