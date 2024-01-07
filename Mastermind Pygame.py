@@ -1,4 +1,5 @@
 # mastermind in pygame!
+from typing import Self
 import pygame
 import random
 
@@ -58,6 +59,16 @@ check = False
 win = False
 lose = False
 
+class players:
+    def __init__(self,name,score):
+        self.name = name
+        self.score = score
+    def getName(self):
+        return self.name
+    def getScore(self):
+        return self.score
+
+        
 
 # class for Buttons
 class buttons:
@@ -128,13 +139,12 @@ def drawMenu():
     leaderboardButton.draw()
 
 def drawLeaderboard():
-    leaderboard_rect = pygame.Rect(width / 2, height / 2, width / 2 + 10, height / 2 + 10)
-    pygame.draw.rect(screen, white, leaderboard_rect)
-    screen.blit(pygame.Surface(leaderboard_rect.size), leaderboard_rect)
-    pygame.display
+    pygame.draw.rect(screen, white, [width / 4 - 5, height / 4 - 5, width / 2 + 10, height / 2 + 10])
+  
     
-def getScore():
-    pass
+def calculateScore():
+    score = 10 - turn
+    print('your score is', score)
 
 def checkGuess():
     global solved, menu, win
@@ -185,15 +195,20 @@ while run:
     mouse_coords = pygame.mouse.get_pos()
     mouse_buttons = pygame.mouse.get_pressed()
     # print(mouse_pressed)
+
     drawScreen()
     if menu:
         drawMenu()
         if win:
             winButton.draw()
+            calculateScore()
         elif lose:
             loseButton.draw()
+            solved = True
+            calculateScore()
         if leaderboard:
             drawLeaderboard()
+
     if check:
         checkGuess()
         turn += 1
@@ -213,6 +228,7 @@ while run:
                 menu = False
                 turn = 0
                 solved = False
+                lose = False
                 answerColours = [random.choice(choiceColours), random.choice(choiceColours),
                                  random.choice(choiceColours), random.choice(choiceColours)]
                 guessColours = [[white, white, white, white],
@@ -238,10 +254,13 @@ while run:
             elif menuButton.rect.collidepoint(event.pos):
                 if not menu:
                     menu = True
-                    if leaderboardButton.rect.collidepoint(event.pos):
-                        leaderboard = True
                 else:
                     menu = False
+            if leaderboardButton.rect.collidepoint(event.pos):
+                if not leaderboard:
+                    leaderboard = True
+                else:
+                    leaderboard = False
             if not menu:
                 if width / 14 < event.pos[0] < 13 * width / 14 \
                         and 11 * height / 13 < event.pos[1] < 12 * height / 13:
